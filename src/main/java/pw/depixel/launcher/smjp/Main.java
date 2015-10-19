@@ -3,11 +3,10 @@ package pw.depixel.launcher.smjp;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import pw.depixel.launcher.smjp.updater.DownloadTask;
 
-import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -22,15 +21,21 @@ public class Main {
             ArrayList<Library> libs = jmo.getLibraries();
 
             ExecutorService pool = Executors.newFixedThreadPool(30);
+
+            // TODO: Переписать эту часть.
             for (Library lib : libs) {
-                System.out.println("Downloading: " + lib.getArtifactFilename());
                 if(lib.getNatives() != null) {
                     HashMap<OS, String> natives = lib.getNatives();
                     for (OS o : natives.keySet()) {
-                        pool.submit(new DownloadTask(lib.getUrl() + lib.getArtifactPath(natives.get(o)), "D:/libs/" + lib.getArtifactPath(natives.get(o))));
+                        pool.submit(new DownloadTask(new URL(lib.getUrl() + lib.getArtifactPath(natives.get(o))), "D:/libs/" + lib.getArtifactPath(natives.get(o))));
+                        /*ZipFile test = new ZipFile(new File("D:/libs/" + lib.getArtifactPath(natives.get(o))));
+                        Enumeration<ZipArchiveEntry> entries = test.getEntries();
+                        while(entries.hasMoreElements()) {
+                            System.out.println(entries.nextElement().getName());
+                        }*/
                     }
                 } else {
-                    pool.submit(new DownloadTask(lib.getUrl() + lib.getArtifactPath(), "D:/libs/" + lib.getArtifactPath()));
+                    pool.submit(new DownloadTask(new URL(lib.getUrl() + lib.getArtifactPath()), "D:/libs/" + lib.getArtifactPath()));
                 }
             }
             pool.shutdown();

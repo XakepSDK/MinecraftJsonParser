@@ -5,7 +5,6 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 
 public @Data class Library {
     private String name;
@@ -15,9 +14,7 @@ public @Data class Library {
     private Extract extract;
 
     public void setNatives(HashMap<OS, String> natives) {
-        Iterator iterator = natives.keySet().iterator();
-        while(iterator.hasNext()) {
-            OS key = (OS) iterator.next();
+        for (OS key : natives.keySet()) {
             String repl = natives.get(key);
             repl = repl.replace("${arch}", "64");
             natives.put(key, repl);
