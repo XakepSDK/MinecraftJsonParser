@@ -1,6 +1,7 @@
 package pw.depixel.launcher.smjp.updater;
 
 import org.apache.commons.compress.utils.IOUtils;
+import pw.depixel.launcher.smjp.services.ICallback;
 import sun.plugin.dom.exception.InvalidStateException;
 
 import java.awt.event.ActionEvent;
@@ -14,9 +15,11 @@ public class DownloadTask implements Runnable, ActionListener {
     private SortedMap<URL, File> urlFileSortedMap;
     private File currentFile;
     private long total;
+    private ICallback callback;
 
-    public DownloadTask(SortedMap<URL, File> urlFileSortedMap) {
+    public DownloadTask(SortedMap<URL, File> urlFileSortedMap, ICallback callback) {
         this.urlFileSortedMap = urlFileSortedMap;
+        this.callback = callback;
     }
 
     @Override
@@ -39,6 +42,7 @@ public class DownloadTask implements Runnable, ActionListener {
                 e.printStackTrace();
             }
         }
+        callback.callback();
     }
 
     @Override

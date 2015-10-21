@@ -2,6 +2,7 @@ package pw.depixel.launcher.smjp;
 
 import lombok.Data;
 import org.apache.commons.lang3.StringUtils;
+import pw.depixel.launcher.smjp.utils.PlatformUtils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -17,7 +18,7 @@ public class Library {
     public void setNatives(HashMap<OSType, String> natives) {
         for (OSType key : natives.keySet()) {
             String repl = natives.get(key);
-            repl = repl.replace("${arch}", "64");
+            repl = repl.replace("${arch}", PlatformUtils.getJdkArch());
             natives.put(key, repl);
         }
         this.natives = natives;

@@ -3,6 +3,7 @@ package pw.depixel.launcher.smjp;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import pw.depixel.launcher.smjp.updater.ChunkedDownloader;
 import pw.depixel.launcher.smjp.utils.PathUtils;
+import pw.depixel.launcher.smjp.utils.PlatformUtils;
 import pw.depixel.launcher.smjp.utils.ShaUtils;
 
 import java.io.File;
@@ -108,13 +109,21 @@ public class Main {
             if (lib.getNatives() != null) {
                 HashMap<OSType, String> natives = lib.getNatives();
                 for (OSType os : natives.keySet()) {
-                    String classifier = natives.get(os);
+                    if (PlatformUtils.getPlatform() == os) {
+                        ArrayList<Rule> rules = lib.getRules();
+                        for (Rule rule : rules) {
+                            if (rule.getOs().getName() != os && !rule.getAction().equals("disallow")) {
+                                String classifier = natives.get(os);
 
-                    url = new URL(lib.getUrl() + lib.getArtifactPath(classifier));
-                    savePath = new File(PathUtils.getWorkingDirectory("libraries/") + lib.getArtifactPath(classifier));
+                                url = new URL(lib.getUrl() + lib.getArtifactPath(classifier));
+                                savePath = new File(PathUtils.getWorkingDirectory("libraries/") + lib.getArtifactPath(classifier));
 
-                    if (ShaUtils.compare(savePath, url)) {
-                        downloadList.put(url, savePath);
+                                if (ShaUtils.compare(savePath, url)) {
+                                    downloadList.put(url, savePath);
+                                }
+                                break;
+                            }
+                        }
                     }
                 }
             } else {
