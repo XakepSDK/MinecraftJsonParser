@@ -1,6 +1,6 @@
 package pw.depixel.launcher.smjp;
 
-public enum OS {
+public enum OSType {
     linux,
     windows,
     osx

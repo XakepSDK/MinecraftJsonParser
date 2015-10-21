@@ -1,45 +1,49 @@
 package pw.depixel.launcher.smjp.updater;
 
 import org.apache.commons.compress.utils.IOUtils;
+import sun.plugin.dom.exception.InvalidStateException;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.*;
 import java.net.URL;
+import java.util.SortedMap;
 
 public class DownloadTask implements Runnable, ActionListener {
 
-    private final URL url;
-    private final File saveFile;
+    private SortedMap<URL, File> urlFileSortedMap;
+    private File currentFile;
+    private long total;
 
-    long total;
-
-    public DownloadTask(URL url, File saveFile) throws IOException {
-        this.url = url;
-        this.saveFile = saveFile;
-
-        File parentPath = saveFile.getParentFile();
-        if (!parentPath.exists() && !parentPath.mkdirs())
-            throw new IOException("Can't create path!");
+    public DownloadTask(SortedMap<URL, File> urlFileSortedMap) {
+        this.urlFileSortedMap = urlFileSortedMap;
     }
 
     @Override
     public void run() {
-        try (OutputStream os = new FileOutputStream(saveFile);
-             InputStream is = url.openStream()) {
+        for (URL url : urlFileSortedMap.keySet()) {
+            currentFile = urlFileSortedMap.get(url);
 
-            total = Long.parseLong(url.openConnection().getHeaderField("Content-Length"));
-            DownloadCountingOutputStream dcount = new DownloadCountingOutputStream(os, total, this);
-            IOUtils.copy(is, dcount);
+            File parentPath = currentFile.getParentFile();
+            if (!parentPath.exists() && !parentPath.mkdirs())
+                throw new InvalidStateException("Can't create path!");
 
-        } catch (IOException e) {
-            e.printStackTrace();
+            try (OutputStream os = new FileOutputStream(currentFile);
+                 InputStream is = url.openStream()) {
+
+                total = Long.parseLong(url.openConnection().getHeaderField("Content-Length"));
+                DownloadCountingOutputStream dcount = new DownloadCountingOutputStream(os, total, this);
+                IOUtils.copy(is, dcount);
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 
     @Override
     public void actionPerformed(ActionEvent e) {
         // Total in % = (Downloaded * 100) / Total
-        System.out.println(saveFile.getName() + " Downloaded: " + ((DownloadCountingOutputStream) e.getSource()).getTotalInPercents());
+        System.out.println(currentFile.getName() + " Downloaded: " + ((DownloadCountingOutputStream) e.getSource()).getTotalInPercents());
     }
 }

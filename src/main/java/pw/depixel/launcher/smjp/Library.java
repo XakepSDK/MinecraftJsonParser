@@ -11,11 +11,11 @@ public class Library {
     private String name;
     private String url;
     private ArrayList<Rule> rules;
-    private HashMap<OS, String> natives;
+    private HashMap<OSType, String> natives;
     private Extract extract;
 
-    public void setNatives(HashMap<OS, String> natives) {
-        for (OS key : natives.keySet()) {
+    public void setNatives(HashMap<OSType, String> natives) {
+        for (OSType key : natives.keySet()) {
             String repl = natives.get(key);
             repl = repl.replace("${arch}", "64");
             natives.put(key, repl);

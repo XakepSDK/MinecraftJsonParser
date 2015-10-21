@@ -4,4 +4,8 @@ public class PathUtils {
     public static String getWorkingDirectory() {
         return "D:/Minecraft/";
     }
+
+    public static String getWorkingDirectory(String classifier) {
+        return getWorkingDirectory() + classifier;
+    }
 }

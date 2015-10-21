@@ -31,12 +31,12 @@ public class DownloadCountingOutputStream extends CountingOutputStream {
         super.afterWrite(n);
 
         totalPercentage = Ints.checkedCast((getByteCount() * 100) / total);
-        if (totalPercentage % 5 == 0) {
-            if (totalPercentage != lastPercentage) {
-                lastPercentage = totalPercentage;
-                listener.actionPerformed(new ActionEvent(this, 0, null));
-            }
+        //if (totalPercentage % 5 == 0) {
+        if (totalPercentage != lastPercentage) {
+            lastPercentage = totalPercentage;
+            listener.actionPerformed(new ActionEvent(this, 0, null));
         }
+        //}
     }
 
     public int getTotalInPercents() {
