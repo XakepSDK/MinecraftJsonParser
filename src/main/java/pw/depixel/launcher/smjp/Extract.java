@@ -4,6 +4,7 @@ import lombok.Data;
 
 import java.util.ArrayList;
 
-public @Data class Extract {
+@Data
+public class Extract {
     private ArrayList<String> exclude;
 }

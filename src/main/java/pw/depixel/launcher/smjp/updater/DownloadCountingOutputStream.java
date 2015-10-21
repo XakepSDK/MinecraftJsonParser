@@ -10,10 +10,9 @@ import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.io.OutputStream;
 
-public
 @Data
 @EqualsAndHashCode(callSuper = true)
-class DownloadCountingOutputStream extends CountingOutputStream {
+public class DownloadCountingOutputStream extends CountingOutputStream {
 
     private final ActionListener listener;
     private final long total;
@@ -31,7 +30,6 @@ class DownloadCountingOutputStream extends CountingOutputStream {
     protected void afterWrite(int n) throws IOException {
         super.afterWrite(n);
 
-        // Total in % = (Downloaded * 100) / Total
         totalPercentage = Ints.checkedCast((getByteCount() * 100) / total);
         if (totalPercentage % 5 == 0) {
             if (totalPercentage != lastPercentage) {

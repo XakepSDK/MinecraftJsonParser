@@ -7,7 +7,8 @@ import lombok.Data;
 import java.io.IOException;
 import java.util.ArrayList;
 
-public @Data class VersionManifest {
+@Data
+public class VersionManifest {
     private String inheritsFrom;
     private String id;
     private String time;
@@ -21,7 +22,7 @@ public @Data class VersionManifest {
     private ArrayList<Library> libraries;
 
     public void setLibraries(ArrayList<Library> libraries) {
-        if(inheritsFrom != null && this.libraries == null) {
+        if (inheritsFrom != null && this.libraries == null) {
             try {
                 this.libraries = libraries;
                 VersionManifest temp = new ObjectMapper().

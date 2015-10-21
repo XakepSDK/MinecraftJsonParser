@@ -6,7 +6,8 @@ import org.apache.commons.lang3.StringUtils;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public @Data class Library {
+@Data
+public class Library {
     private String name;
     private String url;
     private ArrayList<Rule> rules;

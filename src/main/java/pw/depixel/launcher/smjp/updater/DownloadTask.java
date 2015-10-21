@@ -1,6 +1,5 @@
 package pw.depixel.launcher.smjp.updater;
 
-import lombok.Data;
 import org.apache.commons.compress.utils.IOUtils;
 
 import java.awt.event.ActionEvent;
@@ -8,18 +7,25 @@ import java.awt.event.ActionListener;
 import java.io.*;
 import java.net.URL;
 
-public
-@Data
-class DownloadTask implements Runnable, ActionListener {
+public class DownloadTask implements Runnable, ActionListener {
 
     private final URL url;
-    private final String savePath;
+    private final File saveFile;
 
     long total;
 
+    public DownloadTask(URL url, File saveFile) throws IOException {
+        this.url = url;
+        this.saveFile = saveFile;
+
+        File parentPath = saveFile.getParentFile();
+        if (!parentPath.exists() && !parentPath.mkdirs())
+            throw new IOException("Can't create path!");
+    }
+
     @Override
     public void run() {
-        try (OutputStream os = new FileOutputStream(new File(savePath));
+        try (OutputStream os = new FileOutputStream(saveFile);
              InputStream is = url.openStream()) {
 
             total = Long.parseLong(url.openConnection().getHeaderField("Content-Length"));
@@ -27,7 +33,7 @@ class DownloadTask implements Runnable, ActionListener {
             IOUtils.copy(is, dcount);
 
         } catch (IOException e) {
-            System.out.println(url);
+            e.printStackTrace();
         }
     }
 
