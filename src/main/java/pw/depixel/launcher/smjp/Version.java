@@ -26,7 +26,7 @@ public class Version {
         }
     }
 
-    public String getDownloadUrl() {
+    public String getUrl() {
         if (url != null) {
             return url;
         }

@@ -40,6 +40,6 @@ public class DownloadTask implements Runnable, ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         // Total in % = (Downloaded * 100) / Total
-        System.out.println(url + " Downloaded: " + ((DownloadCountingOutputStream) e.getSource()).getTotalInPercents());
+        System.out.println(saveFile.getName() + " Downloaded: " + ((DownloadCountingOutputStream) e.getSource()).getTotalInPercents());
     }
 }
