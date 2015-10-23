@@ -4,9 +4,13 @@ import lombok.Data;
 
 @Data
 public class Rule {
-    private String action;
+    private Action action;
     private OS os;
     private String version;
+
+    enum Action {
+        allow, disallow
+    }
 }
 
 @Data

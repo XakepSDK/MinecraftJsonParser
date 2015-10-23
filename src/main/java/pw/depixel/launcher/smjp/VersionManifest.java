@@ -3,12 +3,14 @@ package pw.depixel.launcher.smjp;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Data;
+import pw.depixel.launcher.smjp.services.IDownloadable;
 
+import java.awt.event.ActionEvent;
 import java.io.IOException;
 import java.util.ArrayList;
 
 @Data
-public class VersionManifest {
+public class VersionManifest implements IDownloadable {
     private String inheritsFrom;
     private String id;
     private String time;
@@ -34,6 +36,13 @@ public class VersionManifest {
 
         } else {
             this.libraries = libraries;
+        }
+    }
+
+    @Override
+    public void download(ActionEvent actionEvent) throws Exception {
+        for (Library lib : libraries) {
+            lib.download(actionEvent);
         }
     }
 }

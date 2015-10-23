@@ -2,6 +2,7 @@ package pw.depixel.launcher.smjp.updater;
 
 import pw.depixel.launcher.smjp.services.ICallback;
 
+import java.awt.event.ActionEvent;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -9,6 +10,7 @@ import java.util.ArrayList;
 import java.util.TreeMap;
 import java.util.concurrent.ExecutorService;
 
+@Deprecated
 public class ChunkedDownloader implements ICallback {
     private ExecutorService pool;
     private int threadsStarted;
@@ -31,17 +33,22 @@ public class ChunkedDownloader implements ICallback {
             System.out.println("START: " + start + " END: " + end);
             if (end == arrSize) end--;
 
-            pool.submit(new DownloadTask(fileList.subMap(list.get(start), list.get(end)), this));
+            //pool.submit(new DownloadTask(fileList.subMap(list.get(start), list.get(end)), this));
             threadsStarted++;
         }
         pool.shutdownNow();
     }
 
     @Override
-    public void callback() {
+    public void completed(String status) {
         threadsStopped++;
         if (threadsStopped == threadsStarted) {
             System.out.println("Загрузка завершена!");
         }
+    }
+
+    @Override
+    public void status(ActionEvent actionEvent) {
+
     }
 }

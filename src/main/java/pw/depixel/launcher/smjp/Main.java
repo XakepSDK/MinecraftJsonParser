@@ -1,29 +1,27 @@
 package pw.depixel.launcher.smjp;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import pw.depixel.launcher.smjp.updater.ChunkedDownloader;
-import pw.depixel.launcher.smjp.utils.PathUtils;
-import pw.depixel.launcher.smjp.utils.PlatformUtils;
-import pw.depixel.launcher.smjp.utils.ShaUtils;
+import lombok.Getter;
+import pw.depixel.launcher.smjp.services.ICallback;
+import pw.depixel.launcher.smjp.updater.DownloadCountingOutputStream;
 
-import java.io.File;
-import java.io.IOException;
+import java.awt.event.ActionEvent;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Scanner;
-import java.util.TreeMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class Main {
-    Scanner scn;
-    ObjectMapper objectMapper;
-    Versions versions;
-    VersionManifest versionManifest;
-    HashMap<ReleaseType, ArrayList<Version>> branchVersions;
-    ArrayList<Version> versionsList;
-    ExecutorService pool;
+public class Main implements ICallback {
+    private Scanner scn;
+    private ObjectMapper objectMapper;
+    private Versions versions;
+    private VersionManifest versionManifest;
+    private HashMap<ReleaseType, ArrayList<Version>> branchVersions;
+    private ArrayList<Version> versionsList;
+    @Getter
+    private ExecutorService pool;
 
     public Main() {
         objectMapper = new ObjectMapper();
@@ -32,7 +30,7 @@ public class Main {
 
         try {
             launchApp();
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
@@ -42,13 +40,13 @@ public class Main {
         new Main();
     }
 
-    public void launchApp() throws IOException {
+    public void launchApp() throws Exception {
         versions = objectMapper.readValue(new URL("http://s3.amazonaws.com/Minecraft.Download/versions/versions.json").openStream(), Versions.class);
         logo();
         selectBranch();
     }
 
-    public void selectBranch() throws IOException {
+    public void selectBranch() throws Exception {
         switch (scn.nextLine()) {
             case "1":
                 printBranchVersions(ReleaseType.snapshot);
@@ -69,7 +67,7 @@ public class Main {
         scn.next();
     }
 
-    public void printBranchVersions(ReleaseType releaseType) throws IOException {
+    public void printBranchVersions(ReleaseType releaseType) throws Exception {
         branchVersions = versions.getByReleaseType(releaseType);
         System.out.println("_------Доступные версии------_");
 
@@ -79,85 +77,28 @@ public class Main {
                 System.out.println(version.getId());
             }
         }
+
         System.out.println("-------Для продолжения-------");
         System.out.println("-___Введите номер версии___-");
         loadVersion(scn.nextLine());
 
     }
 
-    private void loadVersion(String version) throws IOException {
+    private void loadVersion(String version) throws Exception {
         for (Version version1 : versionsList) {
             if (version1.getId().contains(version)) {
                 String manifestUrl = version1.getUrl() + version1.getUrl("client.json");
                 versionManifest = objectMapper.readValue(new URL(manifestUrl).openStream(), VersionManifest.class);
-                loadAll(version1);
+
+                ActionEvent actionEvent = new ActionEvent(this, 0, null);
+                versionManifest.download(actionEvent);
+                version1.download(actionEvent);
+
+                pool.shutdown();
+
                 break;
             }
         }
-    }
-
-    private void loadAll(Version version1) throws IOException {
-        ArrayList<Library> libs = versionManifest.getLibraries();
-        TreeMap<URL, File> downloadList = new TreeMap<>((o1, o2) -> {
-            return o1.toString().compareTo(o2.toString());
-        });
-
-        URL url;
-        File savePath;
-        StringBuilder sb = new StringBuilder();
-        for (Library lib : libs) {
-            if (lib.getNatives() != null) {
-                HashMap<OSType, String> natives = lib.getNatives();
-                for (OSType os : natives.keySet()) {
-                    if (PlatformUtils.getPlatform() == os) {
-                        ArrayList<Rule> rules = lib.getRules();
-                        for (Rule rule : rules) {
-                            if (rule.getOs().getName() != os && !rule.getAction().equals("disallow")) {
-                                String classifier = natives.get(os);
-
-                                url = new URL(lib.getUrl() + lib.getArtifactPath(classifier));
-                                savePath = new File(PathUtils.getWorkingDirectory("libraries/") + lib.getArtifactPath(classifier));
-
-                                if (ShaUtils.compare(savePath, url)) {
-                                    downloadList.put(url, savePath);
-                                }
-                                break;
-                            }
-                        }
-                    }
-                }
-            } else {
-                url = new URL(lib.getUrl() + lib.getArtifactPath());
-                savePath = new File(PathUtils.getWorkingDirectory("libraries/") + lib.getArtifactPath());
-
-                sb.append("libraries/").append(lib.getArtifactPath()).append(";");
-
-                if (ShaUtils.compare(savePath, url)) {
-                    downloadList.put(url, savePath);
-                }
-            }
-        }
-        System.out.println(sb);
-
-        String manifestPath = version1.getUrl("client.json");
-        String manifestUrl = version1.getUrl() + manifestPath;
-        String jarPath = version1.getUrl("client.jar");
-        String jarUrl = version1.getUrl() + jarPath;
-
-        url = new URL(manifestUrl);
-        savePath = new File(PathUtils.getWorkingDirectory("versions/") + manifestPath);
-        if (ShaUtils.compare(savePath, url)) {
-            downloadList.put(url, savePath);
-        }
-
-        url = new URL(jarUrl);
-        savePath = new File(PathUtils.getWorkingDirectory("versions/") + jarPath);
-        if (ShaUtils.compare(savePath, url)) {
-            downloadList.put(url, savePath);
-        }
-
-        ChunkedDownloader downloader = new ChunkedDownloader(pool);
-        downloader.addToQueue(downloadList);
     }
 
     private void logo() {
@@ -168,5 +109,17 @@ public class Main {
         System.out.println("3) Бета");
         System.out.println("4) Альфа");
         System.out.println("-_________________________________________-");
+    }
+
+    @Override
+    public void completed(String isCompleted) {
+        System.out.println(isCompleted);
+    }
+
+    @Override
+    public void status(ActionEvent actionEvent) {
+        DownloadCountingOutputStream dcos = ((DownloadCountingOutputStream) actionEvent.getSource());
+
+        System.out.println(dcos.getFileName() + " Downloaded: " + dcos.getTotalPercentage() + "%");
     }
 }
