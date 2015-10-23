@@ -1,7 +1,7 @@
 package pw.depixel.launcher.smjp.utils;
 
 import org.apache.commons.lang3.SystemUtils;
-import pw.depixel.launcher.smjp.OSType;
+import pw.depixel.launcher.smjp.minecraftjson.OSType;
 
 public class PlatformUtils {
     public static OSType getPlatform() {

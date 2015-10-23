@@ -18,14 +18,12 @@ public class DownloadCountingOutputStream extends CountingOutputStream {
     private final long total;
     private int lastPercentage;
     private int totalPercentage;
-    private String fileName;
 
-    public DownloadCountingOutputStream(OutputStream out, long total, ICallback callback, String fileName) {
+    public DownloadCountingOutputStream(OutputStream out, long total, ICallback callback) {
         super(out);
 
         this.total = total;
         this.callback = callback;
-        this.fileName = fileName;
     }
 
     @Override
@@ -36,6 +34,9 @@ public class DownloadCountingOutputStream extends CountingOutputStream {
         if (totalPercentage != lastPercentage) {
             lastPercentage = totalPercentage;
             callback.status(new ActionEvent(this, 0, null));
+            if (total <= getByteCount()) {
+                callback.completed("complete!");
+            }
         }
     }
 }

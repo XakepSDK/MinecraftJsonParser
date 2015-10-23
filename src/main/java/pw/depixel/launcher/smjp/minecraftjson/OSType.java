@@ -1,4 +1,4 @@
-package pw.depixel.launcher.smjp;
+package pw.depixel.launcher.smjp.minecraftjson;
 
 public enum OSType {
     linux,

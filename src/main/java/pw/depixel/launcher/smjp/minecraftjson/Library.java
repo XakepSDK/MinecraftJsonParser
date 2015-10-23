@@ -1,9 +1,13 @@
-package pw.depixel.launcher.smjp;
+package pw.depixel.launcher.smjp.minecraftjson;
 
 import lombok.Data;
 import org.apache.commons.lang3.StringUtils;
+import pw.depixel.launcher.smjp.Main;
+import pw.depixel.launcher.smjp.services.ICallback;
 import pw.depixel.launcher.smjp.services.IDownloadable;
+import pw.depixel.launcher.smjp.services.IUnpackable;
 import pw.depixel.launcher.smjp.updater.DownloadTask;
+import pw.depixel.launcher.smjp.updater.UnpackTask;
 import pw.depixel.launcher.smjp.utils.PathUtils;
 import pw.depixel.launcher.smjp.utils.PlatformUtils;
 import pw.depixel.launcher.smjp.utils.ShaUtils;
@@ -17,7 +21,7 @@ import java.util.HashMap;
 import java.util.concurrent.ExecutorService;
 
 @Data
-public class Library implements IDownloadable {
+public class Library implements IDownloadable, IUnpackable, ICallback {
     private String name;
     private String url;
     private ArrayList<Rule> rules;
@@ -27,6 +31,9 @@ public class Library implements IDownloadable {
     private boolean download = false;
     private OSType osType;
     private String nativeClassifier;
+    private ICallback callback;
+    private ActionEvent actionEvent;
+    private Main main;
 
     public void setNatives(HashMap<OSType, String> natives) {
         for (OSType key : natives.keySet()) {
@@ -106,26 +113,50 @@ public class Library implements IDownloadable {
     public void download(ActionEvent actionEvent) throws MalformedURLException {
         checkSha1();
 
-        Main main = ((Main) actionEvent.getSource());
+        main = ((Main) actionEvent.getSource());
+        this.actionEvent = actionEvent;
         ExecutorService pool = main.getPool();
+        callback = main;
 
         if (download && !checkSha1()) {
             if (osType != null && nativeClassifier != null) {
-                pool.submit(new DownloadTask(new URL(getUrl() + getArtifactPath(nativeClassifier)),
-                        PathUtils.getWorkingDirectory("libraries/") + getArtifactPath(nativeClassifier), main));
-                main.completed(getArtifactFilename() + " Downloaded.");
+                pool.submit(new DownloadTask(
+                        new URL(getUrl() + getArtifactPath(nativeClassifier)),
+                        new File(PathUtils.getWorkingDirectory("libraries/") + getArtifactPath(nativeClassifier)),
+                        this));
             } else {
-                pool.submit(new DownloadTask(new URL(getUrl() + getArtifactPath()),
-                        PathUtils.getWorkingDirectory("libraries/") + getArtifactPath(), main));
-                main.completed(getArtifactFilename() + " Downloaded.");
+                pool.submit(new DownloadTask(
+                        new URL(getUrl() + getArtifactPath()),
+                        new File(PathUtils.getWorkingDirectory("libraries/") + getArtifactPath()),
+                        this));
             }
         } else {
-            main.completed(getArtifactFilename() + " not allowed to download.");
+            callback.completed(getArtifactFilename() + " not allowed to download.");
         }
     }
 
     private boolean checkSha1() throws MalformedURLException {
         return ShaUtils.compare(new File(PathUtils.getWorkingDirectory("libraries/") + getArtifactPath()),
                 new URL(getUrl() + getArtifactPath() + ".sha1"));
+    }
+
+    @Override
+    public void unpack(File path, File unpackPath) {
+        ExecutorService pool = main.getPool();
+        pool.submit(new UnpackTask(path, unpackPath, extract, callback));
+    }
+
+    @Override
+    public void completed(String isCompleted) {
+        if (osType != null && nativeClassifier != null) {
+            unpack(new File(PathUtils.getWorkingDirectory("libraries/") + getArtifactPath(nativeClassifier)),
+                    new File(PathUtils.getWorkingDirectory("versions/" + main.getVersionManifest().getId() + "/natives/")));
+        }
+        callback.completed(isCompleted + getArtifactFilename(nativeClassifier));
+    }
+
+    @Override
+    public void status(ActionEvent actionEvent) {
+        callback.status(actionEvent);
     }
 }

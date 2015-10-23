@@ -1,6 +1,7 @@
-package pw.depixel.launcher.smjp;
+package pw.depixel.launcher.smjp.minecraftjson;
 
 import lombok.Data;
+import pw.depixel.launcher.smjp.Main;
 import pw.depixel.launcher.smjp.services.IDownloadable;
 import pw.depixel.launcher.smjp.updater.DownloadTask;
 import pw.depixel.launcher.smjp.utils.PathUtils;
@@ -47,18 +48,15 @@ public class Version implements IDownloadable {
         //TODO: Rewrite
 
         String json_slink = PathUtils.getWorkingDirectory("versions/") + getUrl("client.json");
-        String json_dlink = getUrl() + getUrl("client.jar");
+        String json_dlink = getUrl() + getUrl("client.json");
 
-        String jar_slink = PathUtils.getWorkingDirectory("versions/") + getUrl("client.json");
+        String jar_slink = PathUtils.getWorkingDirectory("versions/") + getUrl("client.jar");
         String jar_dlink = getUrl() + getUrl("client.jar");
 
         Main main = ((Main) actionEvent.getSource());
         ExecutorService pool = main.getPool();
 
-        new File(json_slink).getParentFile().mkdirs();
-        new File(jar_slink).getParentFile().mkdirs();
-
-        pool.submit(new DownloadTask(new URL(json_dlink), json_slink, main));
-        pool.submit(new DownloadTask(new URL(jar_dlink), jar_slink, main));
+        pool.submit(new DownloadTask(new URL(json_dlink), new File(json_slink), main));
+        pool.submit(new DownloadTask(new URL(jar_dlink), new File(jar_slink), main));
     }
 }

@@ -2,6 +2,10 @@ package pw.depixel.launcher.smjp;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Getter;
+import pw.depixel.launcher.smjp.minecraftjson.ReleaseType;
+import pw.depixel.launcher.smjp.minecraftjson.Version;
+import pw.depixel.launcher.smjp.minecraftjson.VersionManifest;
+import pw.depixel.launcher.smjp.minecraftjson.Versions;
 import pw.depixel.launcher.smjp.services.ICallback;
 import pw.depixel.launcher.smjp.updater.DownloadCountingOutputStream;
 
@@ -17,6 +21,7 @@ public class Main implements ICallback {
     private Scanner scn;
     private ObjectMapper objectMapper;
     private Versions versions;
+    @Getter
     private VersionManifest versionManifest;
     private HashMap<ReleaseType, ArrayList<Version>> branchVersions;
     private ArrayList<Version> versionsList;
@@ -93,9 +98,6 @@ public class Main implements ICallback {
                 ActionEvent actionEvent = new ActionEvent(this, 0, null);
                 versionManifest.download(actionEvent);
                 version1.download(actionEvent);
-
-                pool.shutdown();
-
                 break;
             }
         }
@@ -120,6 +122,6 @@ public class Main implements ICallback {
     public void status(ActionEvent actionEvent) {
         DownloadCountingOutputStream dcos = ((DownloadCountingOutputStream) actionEvent.getSource());
 
-        System.out.println(dcos.getFileName() + " Downloaded: " + dcos.getTotalPercentage() + "%");
+        System.out.println("Downloaded: " + dcos.getTotalPercentage() + "% ");
     }
 }
